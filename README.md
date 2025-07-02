@@ -1,6 +1,16 @@
 ## Source
 `main.zig`
 
+## 编译
+```shell
+zig build
+```
+## Run
+
+守护进程
+```shell
+bunx pm2 start ./zig-out/bin/listen_keyboard
+```
 ## 快捷键列表
 ```zig
 const keyboard_tasks = [_]Task{

@@ -83,6 +83,7 @@ const keyboard_tasks = [_]Task{
     }
 };
 
+var show_log = false;
 // 全局事件回调
 fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGEventRef, userInfo: ?*anyopaque) callconv(.C) c.CGEventRef {
     _ = proxy;
@@ -105,13 +106,23 @@ fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGE
                 return null;
             }
         }
-        std.debug.print("KeyCode: {}, Flags: 0x{x}\n", .{ keyCode, flags });
+        if(show_log){
+            std.debug.print("KeyCode: {}, Flags: 0x{x}\n", .{ keyCode, flags });
+        }
     }
 
     return event;
 }
 pub fn main() !void {
-     
+    {
+        var args = std.process.args(); 
+        defer args.deinit();
+        while (args.next()) |arg| {
+            if(std.mem.eql(u8, arg, "--show_log")) {
+                show_log = true;
+            }
+        }
+    }
     // 创建 CGEventTap
     // 我也不知道为什么要 1 << ,反正能正常运行
     const eventMask = (1 << c.kCGEventKeyDown);

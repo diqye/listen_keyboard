@@ -83,9 +83,17 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+    exe.addCSourceFile(.{ .file = b.path("src/objc/get_app.m"), .flags =  &.{"-ObjC"} });
+    exe.addCSourceFile(.{ .file = b.path("src/objc/show_text.m"), .flags =  &.{
+        "-ObjC"
+    }});
+
+    exe.addIncludePath(b.path("src"));
     // 添加Macos 系统框架
     exe.linkFramework("ApplicationServices");
     exe.linkFramework("CoreFoundation");
+    exe.linkFramework("AppKit");
+    exe.linkFramework("Cocoa");
     // This declares intent for the executable to be installed into the
     // install prefix when running `zig build` (i.e. when executing the default
     // step). By default the install prefix is `zig-out/` but can be overridden
@@ -123,6 +131,9 @@ pub fn build(b: *std.Build) void {
     // set the releative field.
     const mod_tests = b.addTest(.{
         .root_module = mod,
+        .filters = &.{
+            "diqye"
+        },
     });
 
     // A run step that will run the test executable.
@@ -133,6 +144,9 @@ pub fn build(b: *std.Build) void {
     // hence why we have to create two separate ones.
     const exe_tests = b.addTest(.{
         .root_module = exe.root_module,
+        .filters = &.{
+            "diqye"
+        },
     });
 
     // A run step that will run the second test executable.

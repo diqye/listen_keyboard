@@ -1,16 +1,48 @@
 const std = @import("std");
 // const listen_keyboard = @import("listen_keyboard");
 const c = @cImport({
+    @cDefine("CFSTR(str)", "0"); // 临时将 CFSTR 定义为 0，避免翻译错误
     @cInclude("ApplicationServices/ApplicationServices.h");
+    @cInclude("objc/show_text.h");
 });
 
 /// 打开一个App
-fn openApp(name: [] const u8) !void {
-    const path = c.CFStringCreateWithCString(c.kCFAllocatorDefault, name.ptr, c.kCFStringEncodingUTF8) orelse return error.FailedCreatePath;
-    defer c.CFRelease(path);
-    const url = c.CFURLCreateWithFileSystemPath(c.kCFAllocatorDefault, path, c.kCFURLPOSIXPathStyle, c.TRUE) orelse return error.FailedCreateURL;
-    defer c.CFRelease(url);
-    _ = c.LSOpenCFURLRef(url, null);
+fn openApp(will_opened_app: [] const u8) !void {
+    const allocator = std.heap.page_allocator;
+    const last_foused_app = get_focused_app_name();
+    // a -> b -> b
+    // save a
+    // b -> b -> a
+    const path_name = a:{
+        if(last_foused_app)|last_foused_app_just| {
+            const last_foused_app_just_slice: [] const u8 = std.mem.span(last_foused_app_just);
+            // 如果要打开的App就是当前App本身
+            if(std.mem.eql(u8, last_foused_app_just_slice, will_opened_app)) {
+                if(last_app)|last_app_just| {
+                    // std.debug.print("inner:last_foused_app_just={s},will_opened_app={s},saved_last_app={?s}\n", .{last_foused_app_just_slice,will_opened_app,last_app});
+                   break :a last_app_just; 
+                }
+            } else {
+                const owner = try allocator.dupe(u8, last_foused_app_just_slice);
+                if(last_app)|a| allocator.free(a);
+                last_app = owner;
+            }
+            // std.debug.print("last_foused_app_just={s},will_opened_app={s},saved_last_app={?s}\n", .{last_foused_app_just_slice,will_opened_app,last_app});
+        }
+        break :a will_opened_app;
+    };
+    const cstr_path_name = try allocator.dupeZ(u8, path_name);
+    defer allocator.free(cstr_path_name);
+    const success = open_and_activateApp(cstr_path_name.ptr);
+    _ = success;
+    // std.debug.print("success={}", .{success});
+    // std.debug.print("cstr_path_name={s}\n", .{cstr_path_name});
+    // const path = c.CFStringCreateWithCString(c.kCFAllocatorDefault, cstr_path_name.ptr, c.kCFStringEncodingUTF8) orelse return error.FailedCreatePath;
+    // defer c.CFRelease(path);
+    // const url = c.CFURLCreateWithFileSystemPath(c.kCFAllocatorDefault, path, c.kCFURLPOSIXPathStyle, c.TRUE) orelse return error.FailedCreateURL;
+    // defer c.CFRelease(url);
+    // _ = c.LSOpenCFURLRef(url, null);
+
 
 }
 
@@ -19,110 +51,128 @@ test openApp {
 }
 const Fn = fn() anyerror!void;
 const Task = struct {
-    struct {Keys,u64},
-    Fn,
+    [] const u8,
+    [] const u8,
 };
-fn hello() !void {
-    std.debug.print("hello",.{});
-}
-fn openGoogle() !void {
-    try openApp("/Applications/Google Chrome.app");
-}
-const Keys = enum(i64) {
-    Kw = 13,
-    Kc = 8,
-    Kg = 5,
-    Kt = 17,
-    Kq = 12,
-    Kv = 9,
-    Ka = 0
-};
-const keyboard_tasks = [_]Task{
-    .{
-         // Control + Commnad + g
-        .{Keys.Kg,c.kCGEventFlagMaskControl | c.kCGEventFlagMaskCommand},
-        struct {
-            pub fn call()!void{
-                try openApp("/Applications/Google Chrome.app");
-            }
-        }.call,
-    },
-    .{
-        // Contrl + Command + t
-        .{Keys.Kt,c.kCGEventFlagMaskControl | c.kCGEventFlagMaskCommand},
-        struct {
-            pub fn call()!void{
-                try openApp("/System/Applications/Utilities/Terminal.app");
-            }
-        }.call,
-    },
-    .{
-        // Contrl + Command + c
-        .{Keys.Kc,c.kCGEventFlagMaskControl | c.kCGEventFlagMaskCommand},
-        struct {
-            pub fn call()!void{
-                try openApp("/Applications/Visual Studio Code.app");
-            }
-        }.call,
-    },
-    .{
-        .{Keys.Ka,c.kCGEventFlagMaskControl | c.kCGEventFlagMaskCommand},
-        struct {
-            pub fn call()!void{
-                try openApp("/Applications/QQ.app");
-            }
-        }.call,
-    },
-    .{
-        .{Keys.Kw,c.kCGEventFlagMaskControl | c.kCGEventFlagMaskCommand},
-        struct {
-            pub fn call()!void{
-                try openApp("/Applications/WeChat.app");
-            }
-        }.call,
-    }
-};
+/// when ⌘⌃g open /Applications/Google Chrome.app.
+/// Press ⌘⌃g to open  /Applications/Google Chrome.app
+/// 
+var keyboard_tasks : [] Task = &.{};
+
+
 
 var show_log = false;
+var show_key_text = false;
+var last_app: ?[] const u8 = null;
 // 全局事件回调
 fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGEventRef, userInfo: ?*anyopaque) callconv(.C) c.CGEventRef {
     _ = proxy;
     _ = userInfo;
-
+    // const allocator = std.heap.page_allocator;
     if (type_ == c.kCGEventKeyDown) {
-        const flags = c.CGEventGetFlags(event);
-        // 如果修饰键没有按下，则忽略
-        if(flags == 0x100) return event;
-        const keyCode = c.CGEventGetIntegerValueField(event, c.kCGKeyboardEventKeycode);
-        // 从配置列表中匹配对应的函数
-        inline for(keyboard_tasks)|task| {
-            // 这个条件判断，会判断两个修饰键同时按下.
-            if(keyCode == @intFromEnum(task[0][0]) and  flags &  task[0][1] == task[0][1]) {
-                _ = std.Thread.spawn(.{}, task[1],.{}) catch {
-                    // 单独起一个系统线程执行，防止block时间太久，被系统限制。
-                    std.debug.print("spawn error", .{});
+        const key_str = c.key_string_from_CGEvent(event);
+        defer std.c.free(key_str);
+        if(show_key_text) c.show_text_for_duration(key_str, 1);
+        const key_name: [] const u8 = std.mem.span(key_str);
+        if(show_log) {
+            std.debug.print("Press {s} \n", .{key_name});
+        }
+
+        if(std.mem.eql(u8, "⌘⌥⌃k", std.mem.span(key_str))) {
+            show_key_text = !show_key_text;
+        }
+        for(keyboard_tasks) |task| {
+            const press,const app = task;
+            if(std.mem.eql(u8, press, std.mem.span(key_str))) {
+                openApp(app) catch {
+                    std.debug.print("Failed to open app {s}", .{app});
                 };
-                // 屏蔽快捷键,防止其他程序处理。
                 return null;
             }
         }
-        if(show_log){
-            std.debug.print("KeyCode: {}, Flags: 0x{x}\n", .{ keyCode, flags });
+    }
+    return event;
+}  
+
+fn parseConfig() !void {
+    const allocator = std.heap.page_allocator;
+    const home = try std.process.getEnvVarOwned(allocator, "HOME");
+    defer allocator.free(home);
+
+    var dir = try std.fs.openDirAbsolute(home, .{});
+    defer dir.close();
+    const config_path =".config/listen_keyboard/config";
+    try dir.makePath(std.fs.path.dirname(config_path) orelse unreachable);
+    var file  = dir.createFile(config_path, .{.read = true,.truncate = false}) catch |e| switch (e) {
+        else => {
+            std.debug.print("error = {}", .{e});
+            std.process.exit(1);
+        }
+    };
+    defer file.close();
+    const content = file.readToEndAlloc(allocator, 1024 * 1024 * 100) catch |e| {
+            std.debug.print("file.readToEndAlloc error = {}", .{e});
+            std.process.exit(1);
+        unreachable;
+    };
+    defer allocator.free(content);
+
+    var iterator = std.mem.splitScalar(u8, content, '\n');
+    var list = std.ArrayList(Task).init(allocator);
+    defer list.deinit();
+    while(iterator.next()) | line | {
+        if(line.len < 7) continue;
+        if(line[0] == '#') continue;
+        if(std.mem.startsWith(u8, line, "Press")) {
+            if(std.mem.indexOf(u8, line, "open"))|open_start| {
+                const key_str = line[5..open_start];
+                const app_path = line[open_start+4..];
+                try list.append(.{
+                    try allocator.dupe(u8, std.mem.trim(u8,key_str, " ")),
+                    try allocator.dupe(u8, std.mem.trim(u8,app_path, " ")),
+                });
+            } else {
+                std.debug.print("Parse error = {s}\n", .{line});
+                std.process.exit(0);
+            }
         }
     }
-
-    return event;
+    keyboard_tasks = (try list.clone()).items;
+    if(show_log) {
+        for(keyboard_tasks)|t| {
+            std.debug.print("key={s},app={s}\n", .{t[0],t[1]});
+        }
+    }
+}
+test "parse config" {
+    try parseConfig();
 }
 pub fn main() !void {
+    // std.process.exit(0);
     {
         var args = std.process.args(); 
         defer args.deinit();
         while (args.next()) |arg| {
-            if(std.mem.eql(u8, arg, "--show_log")) {
+            if(std.mem.eql(u8, arg, "--verbose")) {
                 show_log = true;
+            } else if(std.mem.eql(u8, arg, "--key_text")) {
+                show_key_text = true;
+            } else if(std.mem.eql(u8, arg, "--help")) {
+                std.debug.print(\\ 监听系统级别全局按键，用于显示在屏幕上，打开App
+                \\ 配置文件 $HOME/.config/listen_keyboard/config
+                \\ listen_keyboard [Options]
+                \\ --verbose  显示日志
+                \\ --key_text 将按键显示在屏幕最上方
+                \\ --help     显示帮助
+                \\
+                , .{});
+                std.process.exit(0);
             }
+
         }
     }
+    try parseConfig();
+    c.init_cocoa_app();
     // 创建 CGEventTap
     // 我也不知道为什么要 1 << ,反正能正常运行
     const eventMask = (1 << c.kCGEventKeyDown);
@@ -161,3 +211,33 @@ pub fn main() !void {
     // }
 }
 
+test "mytest" {
+    const pid = try std.posix.fork();
+    const pid2 = try std.posix.fork();
+    std.debug.print("pid={?},pid2={?}\n", .{pid,pid2});
+}
+
+fn createCFString(c_str: [*:0]const u8) c.CFStringRef {
+    const cf_str = c.CFStringCreateWithCString(
+        c.kCFAllocatorDefault,
+        c_str,
+        c.kCFStringEncodingUTF8
+    );
+    if (cf_str == null) @panic("Failed to create CFString");
+    return cf_str;
+}
+test "span" {
+    const b:[*c] const u8  = "helo";
+    const a : [] const u8 = std.mem.span(b);
+    std.debug.print("{s}", .{a});
+}
+
+extern fn get_focused_app_name() callconv(.C) ?[*:0] const u8;
+extern fn open_and_activateApp([*:0] const u8) callconv(.C) u8;
+
+test "show_floating_text" {
+}
+test "get current app" {
+    const name = get_focused_app_name();
+    std.debug.print("{?s}", .{name});
+}

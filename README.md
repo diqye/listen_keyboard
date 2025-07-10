@@ -1,7 +1,14 @@
-## 编译
+## 编译 或 下载
 ```shell
 zig build
 ```
+[点我下载exe](https://github.com/diqye/listen_keyboard/releases/download/v0.0.1/listen_keyboard)
+
+清除`MacOS`限制
+```shell
+xattr -d com.apple.quarantine listen_keyboard
+```
+
 ## 使用
 
 使用快捷键切换至`App`,如果当前`App`已经是要切换的了，则溯源到上一个活跃窗口.

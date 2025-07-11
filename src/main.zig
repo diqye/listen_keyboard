@@ -79,7 +79,13 @@ fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGE
         }
 
         if(std.mem.eql(u8, "⌘⌥⌃k", std.mem.span(key_str))) {
-            show_key_text = !show_key_text;
+            if(show_key_text) {
+                c.show_text_for_duration("关闭屏幕显示 ", 1);
+                show_key_text = false;
+            } else {
+                c.show_text_for_duration("开启屏幕显示 ", 1);
+                show_key_text = true;
+            }
         }
         for(keyboard_tasks) |task| {
             const press,const app = task;
@@ -173,6 +179,7 @@ pub fn main() !void {
     }
     try parseConfig();
     c.init_cocoa_app();
+    std.debug.print("开启/关闭屏幕显示快捷键 ⌘⌥⌃k\n", .{});
     // 创建 CGEventTap
     // 我也不知道为什么要 1 << ,反正能正常运行
     const eventMask = (1 << c.kCGEventKeyDown);

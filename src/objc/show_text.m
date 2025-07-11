@@ -33,7 +33,7 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
 
             NSView *contentView = [[NSView alloc] initWithFrame:windowFrame];
             contentView.wantsLayer = YES;
-            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.5] CGColor];
+            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
 
             textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 20, windowFrame.size.width - 40, 60)];
             textField.editable = NO;
@@ -49,7 +49,9 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             [overlayWindow setContentView:contentView];
 
             NSRect pos = windowFrame;
-            pos.origin.y = 0; // 屏幕底部
+            // pos.origin.y = 0; // 屏幕底层
+
+            pos.origin.y = screenFrame.size.height - windowFrame.size.height - 50; // 屏幕上方
             [overlayWindow setFrame:pos display:YES];
             [overlayWindow orderFrontRegardless];
         }
@@ -95,7 +97,7 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 6: return @"z";
         case 7: return @"x";
         case 8: return @"c";
-        case 9: return @"V";
+        case 9: return @"v";
         case 11: return @"b";
         case 12: return @"q";
         case 13: return @"w";

@@ -83,9 +83,9 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
-    exe.addCSourceFile(.{ .file = b.path("src/objc/get_app.m"), .flags =  &.{"-ObjC"} });
+    exe.addCSourceFile(.{ .file = b.path("src/objc/get_app.m"), .flags =  &.{"-fobjc-arc"} });
     exe.addCSourceFile(.{ .file = b.path("src/objc/show_text.m"), .flags =  &.{
-        "-ObjC"
+        "-fobjc-arc"
     }});
 
     exe.addIncludePath(b.path("src"));

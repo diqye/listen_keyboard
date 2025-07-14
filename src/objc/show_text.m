@@ -75,9 +75,10 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
         clearTimer = [NSTimer scheduledTimerWithTimeInterval:seconds
                                                       repeats:NO
                                                         block:^(NSTimer * _Nonnull timer) {
-            [textBuffer setString:@""];
-            textField.stringValue = @"";
+            // [textBuffer setString:@""];
+            // textField.stringValue = @"";
             [overlayWindow orderOut:nil];
+            textBuffer = nil;
             overlayWindow = nil;
             textField = nil;
             clearTimer = nil;
@@ -123,7 +124,7 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 33: return @"[";
         case 34: return @"i";
         case 35: return @"p";
-        case 36: return @"<Return>";
+        case 36: return @"<enter>";
         case 37: return @"l";
         case 38: return @"j";
         case 39: return @"'";
@@ -135,27 +136,27 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 45: return @"n";
         case 46: return @"m";
         case 47: return @".";
-        case 48: return @"<Tab>";
-        case 49: return @"<Space>";
+        case 48: return @"<tab>";
+        case 49: return @"<space>";
         case 50: return @"`";
-        case 51: return @"<Delete>";
-        case 53: return @"<Escape>";
-        case 123: return @"<Left>";
-        case 124: return @"<Right>";
-        case 125: return @"<Down>";
-        case 126: return @"<Up>";
-        case 122: return @"<F1>";
-        case 120: return @"<F2>";
-        case 99:  return @"<F3>";
-        case 118: return @"<F4>";
-        case 96:  return @"<F5>";
-        case 97:  return @"<F6>";
-        case 98:  return @"<F7>";
-        case 100: return @"<F8>";
-        case 101: return @"<F9>";
-        case 109: return @"<F10>";
-        case 103: return @"<F11>";
-        case 111: return @"<F12>";
+        case 51: return @"<backspace>";
+        case 53: return @"<esc>";
+        case 123: return @"<left>";
+        case 124: return @"<right>";
+        case 125: return @"<down>";
+        case 126: return @"<up>";
+        case 122: return @"<f1>";
+        case 120: return @"<f2>";
+        case 99:  return @"<f3>";
+        case 118: return @"<f4>";
+        case 96:  return @"<f5>";
+        case 97:  return @"<f6>";
+        case 98:  return @"<f7>";
+        case 100: return @"<f8>";
+        case 101: return @"<f9>";
+        case 109: return @"<f10>";
+        case 103: return @"<f11>";
+        case 111: return @"<f12>";
         default:
             return [NSString stringWithFormat:@"<%d>", keyCode];
     }

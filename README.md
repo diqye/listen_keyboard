@@ -1,8 +1,11 @@
-## 编译 或 下载
+## 安装
+两种方式，1. clone到本地编译； 2. 直接下载exe
+### 编译
 ```shell
 zig build
 ```
-[点我下载exe](https://github.com/diqye/listen_keyboard/releases/download/v0.0.2/listen_keyboard)
+### 下载
+[下载exe](https://github.com/diqye/listen_keyboard/releases/latest)
 
 清除`MacOS`限制
 ```shell

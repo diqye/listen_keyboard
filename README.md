@@ -3,7 +3,7 @@
 2. 快捷键 -> 菜单
 
 <div>
-    <video src="asserts/readme_showcase.mp4" mute autoplay controls />
+    <video src="./asserts/readme_showcase.mp4" mute autoplay controls />
 </div>
 
 ## 安装

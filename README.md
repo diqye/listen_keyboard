@@ -1,3 +1,7 @@
+# listen_keyboard
+1. 快捷键 -> App
+2. 快捷键 -> 菜单
+
 ## 安装
 两种方式，1. clone到本地编译； 2. 直接下载exe
 ### 编译
@@ -17,7 +21,6 @@ xattr -d com.apple.quarantine listen_keyboard
 使用快捷键切换至`App`,如果当前`App`已经是要切换的了，则溯源到上一个活跃窗口.
 
 ```shell
- 监听系统级别全局按键，用于显示在屏幕上，打开App
  配置文件 $HOME/.config/listen_keyboard/config
  listen_keyboard [Options]
  --verbose  显示日志
@@ -37,17 +40,25 @@ bunx --no-install pm2 start ./zig-out/bin/listen_keyboard
 ``` shell
 # 这里是注释
 # 
-# 快捷键顺序 ⌘⇧⌥⌃, 修饰键必须按照这个顺序写。
-# //  = [_]Task{
+# 顺序 ⌘⇧⌥⌃, 修饰键必须按照这个顺序写。
 
 # 打开Google
-Press ⌘⌃g open /Applications/Google Chrome.app
-Press ⌘⌃c open /Applications/Visual Studio Code.app
-Press ⌘⌃a open /Applications/QQ.app
-Press ⌘⌃w open /Applications/WeChat.app
+Press ⌘⌃g to open /Applications/Google Chrome.app
+Press ⌘⌃c to open /Applications/Visual Studio Code.app
+Press ⌘⌃a to open /Applications/QQ.app
+Press ⌘⌃w to open /Applications/WeChat.app
 # 飞书
-Press ⌘⌃f open /Applications/Lark.app
+Press ⌘⌃f to open /Applications/Lark.app
 # Terminal
-Press ⌘⌃t open /Applications/Ghostty.app
+Press ⌘⌃t to open /Applications/Ghostty.app
+
+# 点击菜单
+Press ⌘⌃1 to click Window  -> Move & Resize -> Left
+Press ⌘⌃9 to click Window  -> Move & Resize -> Right
+Press ⌘⌃5 to click Window  -> Center
+Press ⌘⌃6 to click Window  -> Move & Resize -> Left & Right
+# Press ⌘⌃0 to click Window  -> Move & Resize -> Quarters
+Press ⌘⌃= to click Window  -> Zoom
+
 
 ```

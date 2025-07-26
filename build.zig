@@ -144,9 +144,10 @@ pub fn build(b: *std.Build) void {
     // hence why we have to create two separate ones.
     const exe_tests = b.addTest(.{
         .root_module = exe.root_module,
-        .filters = &.{
-            "diqye"
-        },
+        .filter = "diqye",
+        // .filters = &.{
+        //     "diqye"
+        // },
     });
 
     // A run step that will run the second test executable.

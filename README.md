@@ -2,9 +2,10 @@
 1. 快捷键 -> App
 2. 快捷键 -> 菜单
 
-<div>
-    <video src="./asserts/readme_showcase.mp4" mute autoplay controls />
-</div>
+
+https://github.com/user-attachments/assets/3df3af00-74bb-4ced-aeb8-a81cdf20b2b4
+
+
 
 ## 安装
 两种方式，1. clone到本地编译； 2. 直接下载exe
@@ -63,6 +64,4 @@ Press ⌘⌃5 to click Window  -> Center
 Press ⌘⌃6 to click Window  -> Move & Resize -> Left & Right
 # Press ⌘⌃0 to click Window  -> Move & Resize -> Quarters
 Press ⌘⌃= to click Window  -> Zoom
-
-
 ```

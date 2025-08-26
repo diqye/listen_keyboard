@@ -67,8 +67,8 @@ var keyboard_tasks : [] Task = &.{};
 var show_log = false;
 var show_key_text = false;
 var last_app: ?[] const u8 = null;
-// 全局事件回调
-fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGEventRef, userInfo: ?*anyopaque) callconv(.C) c.CGEventRef {
+/// 全局事件回调
+fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGEventRef, userInfo: ?*anyopaque) callconv(.c) c.CGEventRef {
     _ = proxy;
     _ = userInfo;
     // const allocator = std.heap.page_allocator;
@@ -84,9 +84,10 @@ fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGE
                 std.mem.startsWith(u8, key_str_zig,"⌃") 
             ) {
                 const allocator = std.heap.page_allocator;
-                const new_str = std.fmt.allocPrintZ(allocator, " {s} ", .{key_str_zig}) catch unreachable;
+                const new_str: [] u8 = std.fmt.allocPrint(allocator, " {s} ", .{key_str_zig}) catch unreachable;
                 defer allocator.free(new_str);
-                c.show_text_for_duration(new_str, 1);
+                const c_str = allocator.dupeZ(u8, new_str) catch unreachable;
+                c.show_text_for_duration(c_str, 1);
             } else {
                 c.show_text_for_duration(key_str, 1);
             }
@@ -156,8 +157,8 @@ fn parseConfig() !void {
     defer allocator.free(content);
 
     var iterator = std.mem.splitScalar(u8, content, '\n');
-    var list = std.ArrayList(Task).init(allocator);
-    defer list.deinit();
+    var list : std.ArrayList(Task) = .empty;
+    defer list.deinit(allocator);
     while(iterator.next()) | line | {
         if(line.len < 7) continue;
         if(line[0] == '#') continue;
@@ -165,7 +166,7 @@ fn parseConfig() !void {
             if(std.mem.indexOf(u8, line, "to open"))|open_start| {
                 const key_str = line[5..open_start];
                 const app_path = line[open_start+7..];
-                try list.append(.{
+                try list.append(allocator,.{
                     try allocator.dupe(u8, std.mem.trim(u8,key_str, " ")),
                     .{
                         .app = try allocator.dupe(u8, std.mem.trim(u8,app_path, " ")),
@@ -174,7 +175,7 @@ fn parseConfig() !void {
             } else if(std.mem.indexOf(u8, line, "to click"))|the_idx| {
                 const key_str = line[5..the_idx];
                 const app_path = line[the_idx+8..];
-                try list.append(.{
+                try list.append(allocator,.{
                     try allocator.dupe(u8, std.mem.trim(u8,key_str, " ")),
                     .{
                         .menu = try allocator.dupe(u8, std.mem.trim(u8,app_path, " ")),
@@ -186,7 +187,7 @@ fn parseConfig() !void {
             }
         }
     }
-    keyboard_tasks = (try list.clone()).items;
+    keyboard_tasks = (try list.clone(allocator)).items;
     if(show_log) {
         for(keyboard_tasks)|t| {
             switch (t[1]) {
@@ -289,8 +290,8 @@ test "span" {
     std.debug.print("{s}", .{a});
 }
 
-extern fn get_focused_app_name() callconv(.C) ?[*:0] const u8;
-extern fn open_and_activateApp([*:0] const u8) callconv(.C) u8;
+extern fn get_focused_app_name()  ?[*:0] const u8;
+extern fn open_and_activateApp([*:0] const u8)  u8;
 
 test "show_floating_text" {
 }
@@ -484,7 +485,7 @@ test "mydiqye-" {
 fn clickMenu(menu_path: [] const u8) !void {
     const allocator = std.heap.page_allocator;
     var menu_list = try menuPath2list(allocator, menu_path);
-    defer menu_list.deinit();
+    defer menu_list.deinit(allocator);
 
     var app_info = r: {
         var app_info:AppInfo = undefined;
@@ -645,7 +646,7 @@ const ValueItem = extern struct {
         });
     }
 };
-extern fn frontmostApplication(out_info: *AppInfo) callconv(.C) c_uint;
+extern fn frontmostApplication(out_info: *AppInfo) c_uint;
 const AXUIElementRef = ?*opaque {};
 extern fn getMenubarRefFromPid(pid: c_int, out_menubar: *AXUIElementRef) c_uint;
 const CFArrayRef = ?*opaque {};
@@ -662,12 +663,12 @@ fn menuPath2list(allocator: std.mem.Allocator,str: [] const u8) !std.ArrayList([
     // 这样做为了避免Allocator
     var iter = std.mem.splitSequence(u8, str, "->");
     // 使用一个List 存储起来
-    var list = std.ArrayList([] const u8).init(allocator);
+    var list: std.ArrayList([] const u8) = .empty;
 
     // 因为next函数传入的是一个指针，所以const大概率是会报错的，保险起见使用var
     while(iter.next())|item| {
         const item_trimed = std.mem.trim(u8, item, " ");
-        try list.append(item_trimed);
+        try list.append(allocator,item_trimed);
     }
     return list;
 }

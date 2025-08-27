@@ -84,10 +84,9 @@ fn eventTapCallback(proxy: c.CGEventTapProxy, type_: c.CGEventType, event: c.CGE
                 std.mem.startsWith(u8, key_str_zig,"⌃") 
             ) {
                 const allocator = std.heap.page_allocator;
-                const new_str: [] u8 = std.fmt.allocPrint(allocator, " {s} ", .{key_str_zig}) catch unreachable;
+                const new_str: [:0] u8 = std.fmt.allocPrintSentinel(allocator, " {s} ", .{key_str_zig},0) catch unreachable;
                 defer allocator.free(new_str);
-                const c_str = allocator.dupeZ(u8, new_str) catch unreachable;
-                c.show_text_for_duration(c_str, 1);
+                c.show_text_for_duration(new_str, 1);
             } else {
                 c.show_text_for_duration(key_str, 1);
             }

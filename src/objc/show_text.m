@@ -35,13 +35,14 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             NSView *contentView = [[NSView alloc] initWithFrame:windowFrame];
             contentView.wantsLayer = YES;
             // contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
-            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0] CGColor];
+            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.5] CGColor];
 
             textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 20, windowFrame.size.width - 40, 60)];
             textField.editable = NO;
             textField.bezeled = NO;
             textField.drawsBackground = NO;
-            textField.textColor = [NSColor magentaColor];
+            textField.textColor = [NSColor whiteColor];
+            // textField.textColor = [NSColor magentaColor];
             textField.font = [NSFont systemFontOfSize:20];
             textField.alignment = NSTextAlignmentCenter;
             textField.lineBreakMode = NSLineBreakByWordWrapping;

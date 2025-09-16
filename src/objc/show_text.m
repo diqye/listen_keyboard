@@ -20,7 +20,7 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             NSScreen *mainScreen = [NSScreen mainScreen];
             NSRect screenFrame = mainScreen.frame;
 
-            NSRect windowFrame = NSMakeRect(0, 0, screenFrame.size.width, 100);
+            NSRect windowFrame = NSMakeRect(0, 0, screenFrame.size.width, 60);
             overlayWindow = [[NSWindow alloc] initWithContentRect:windowFrame
                                                          styleMask:NSWindowStyleMaskBorderless
                                                            backing:NSBackingStoreBuffered
@@ -37,7 +37,7 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             // contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
             contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.5] CGColor];
 
-            textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 20, windowFrame.size.width - 40, 60)];
+            textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 10, windowFrame.size.width - 40, 30)];
             textField.editable = NO;
             textField.bezeled = NO;
             textField.drawsBackground = NO;
@@ -78,11 +78,15 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             textBuffer = [NSMutableString new];
         }
 
-        // if (textBuffer.length > 0) {
-        //     [textBuffer appendString:@" "];
-        // }
         [textBuffer appendString:newText];
         textField.stringValue = textBuffer;
+        // 超过显示区域宽度，只保留2个元素
+        NSDictionary *attributes = @{NSFontAttributeName: textField.font};
+        CGSize textSize = [textBuffer sizeWithAttributes:attributes];
+        if (textSize.width > textField.bounds.size.width - 20) {
+            [textBuffer deleteCharactersInRange:NSMakeRange(0, textBuffer.length)];
+            // [textBuffer appendString:newText];
+        }
 
         // 重置定时器
         if (clearTimer) {

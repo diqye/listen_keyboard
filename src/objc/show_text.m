@@ -35,24 +35,26 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             NSView *contentView = [[NSView alloc] initWithFrame:windowFrame];
             contentView.wantsLayer = YES;
             // contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
-            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.5] CGColor];
+            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.1] CGColor];
 
             textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 10, windowFrame.size.width - 40, 30)];
             textField.editable = NO;
             textField.bezeled = NO;
             textField.drawsBackground = NO;
-            textField.textColor = [NSColor whiteColor];
+            textField.textColor = [NSColor grayColor];
             // textField.textColor = [NSColor magentaColor];
             textField.font = [NSFont systemFontOfSize:20];
-            textField.alignment = NSTextAlignmentCenter;
+            textField.alignment = NSTextAlignmentRight;
             textField.lineBreakMode = NSLineBreakByWordWrapping;
             textField.usesSingleLineMode = NO;
 
             // Create shadow
             NSShadow *textShadow = [[NSShadow alloc] init];
-            [textShadow setShadowColor:[[NSColor blackColor] colorWithAlphaComponent:0.5]];
-            [textShadow setShadowOffset:NSMakeSize(2.0, -2.0)];
-            [textShadow setShadowBlurRadius:3.0];
+            // [textShadow setShadowColor:[[NSColor blackColor] colorWithAlphaComponent:0.5]];
+            [textShadow setShadowColor:[[NSColor whiteColor] colorWithAlphaComponent:0.8]];
+            // [textShadow setShadowOffset:NSMakeSize(2.0, -2.0)];
+            [textShadow setShadowOffset:NSMakeSize(4.0, -4.0)];
+            [textShadow setShadowBlurRadius:6.0];
 
             // Apply shadow to text
             NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:textField.stringValue];

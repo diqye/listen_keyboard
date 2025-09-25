@@ -3,7 +3,7 @@
 #define SHOW_TEXT_H
 
 void init_cocoa_app(void);
-void show_text_for_duration(const char *utf8_text, int seconds);
+void show_text_for_duration(const char *utf8_text, float seconds);
 
 /// 获取系统风格快捷键字符串，如：⌘⇧Z、⌥<Space>、A
 /// - 参数: event — 来自 macOS Quartz 的 CGEventRef

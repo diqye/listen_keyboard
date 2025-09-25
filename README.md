@@ -1,6 +1,9 @@
 # listen_keyboard
-1. 快捷键 -> App
-2. 快捷键 -> 菜单
+利用Macos系统API监听全局快捷键完成下面功能：
+
+1. 快捷键打开 App
+2. 快捷键模拟用户点击菜单
+3. 将按键显示在屏幕上
 
 
 https://github.com/user-attachments/assets/3df3af00-74bb-4ced-aeb8-a81cdf20b2b4

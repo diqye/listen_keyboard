@@ -13,6 +13,110 @@ void init_cocoa_app(void) {
     [NSApp activateIgnoringOtherApps:YES];
 }
 
+void show_text_for_duration(const char *utf8_text, float seconds) {
+    NSString *newText = [[NSString alloc] initWithUTF8String:utf8_text];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSScreen *mainScreen = [NSScreen mainScreen];
+        NSRect screenFrame = mainScreen.frame;
+
+        if (!overlayWindow) {
+            // 固定窗口高度
+            NSRect windowFrame = NSMakeRect(0, 0, screenFrame.size.width, 60);
+            overlayWindow = [[NSWindow alloc] initWithContentRect:windowFrame
+                                                         styleMask:NSWindowStyleMaskBorderless
+                                                           backing:NSBackingStoreBuffered
+                                                             defer:NO];
+            [overlayWindow setOpaque:NO];
+            [overlayWindow setBackgroundColor:[NSColor clearColor]];
+            [overlayWindow setLevel:NSScreenSaverWindowLevel]; // 最上层
+            [overlayWindow setIgnoresMouseEvents:YES]; // 事件穿透
+            [overlayWindow setAlphaValue:1.0];
+            [overlayWindow setReleasedWhenClosed:NO];
+
+            // 背景条（初始最小宽度，后面动态调整）
+            NSRect contentFrame = NSMakeRect(screenFrame.size.width - 200 - 20,
+                                             0,
+                                             200,
+                                             windowFrame.size.height);
+            NSView *contentView = [[NSView alloc] initWithFrame:contentFrame];
+            contentView.wantsLayer = YES;
+            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.5] CGColor];
+            contentView.layer.cornerRadius = 8.0;
+
+            textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 10, contentFrame.size.width - 40, 30)];
+            textField.editable = NO;
+            textField.bezeled = NO;
+            textField.drawsBackground = NO;
+            textField.textColor = [NSColor whiteColor];
+            textField.font = [NSFont boldSystemFontOfSize:20];
+            textField.alignment = NSTextAlignmentRight;
+            textField.lineBreakMode = NSLineBreakByClipping;
+            textField.cell.wraps = NO;
+            textField.usesSingleLineMode = YES;
+
+            [contentView addSubview:textField];
+            [overlayWindow setContentView:contentView];
+
+            // 显示在屏幕上方
+            NSRect pos = windowFrame;
+            pos.origin.y = screenFrame.size.height - windowFrame.size.height - 20;
+            [overlayWindow setFrame:pos display:YES];
+            [overlayWindow orderFrontRegardless];
+        }
+
+        // 初始化缓存
+        if (!textBuffer) {
+            textBuffer = [NSMutableString new];
+        }
+
+        // 追加文本
+        [textBuffer appendString:newText];
+        textField.stringValue = textBuffer;
+
+        // 计算文本宽度
+        NSDictionary *attributes = @{NSFontAttributeName: textField.font};
+        CGSize textSize = [textBuffer sizeWithAttributes:attributes];
+        CGFloat padding = 50;
+        CGFloat bgWidth = textSize.width + padding;
+        [textField setFrame:NSMakeRect(20, 10, bgWidth - 36, 30)];
+
+        CGFloat maxWidth = screenFrame.size.width - 100;
+        if (bgWidth > maxWidth) {
+            // 超过最大宽度：清空重新开始
+            [textBuffer setString:newText];
+            textField.stringValue = textBuffer;
+            textSize = [textBuffer sizeWithAttributes:attributes];
+            bgWidth = textSize.width + padding;
+        }
+
+        // 更新背景条（右对齐）
+        NSView *contentView = overlayWindow.contentView;
+        NSRect contentFrame = contentView.frame;
+        contentFrame.size.width = bgWidth;
+        contentFrame.origin.x = screenFrame.size.width - bgWidth - 20;
+        [contentView setFrame:contentFrame];
+
+        // 更新文字区域
+        [textField setFrame:NSMakeRect(20, 10, bgWidth - 40, 30)];
+
+        // 重置定时器
+        if (clearTimer) {
+            [clearTimer invalidate];
+        }
+
+        clearTimer = [NSTimer scheduledTimerWithTimeInterval:seconds
+                                                      repeats:NO
+                                                        block:^(NSTimer * _Nonnull timer) {
+            [overlayWindow orderOut:nil];
+            textBuffer = nil;
+            overlayWindow = nil;
+            textField = nil;
+            clearTimer = nil;
+        }];
+    });
+}
+              
+/*
 void show_text_for_duration(const char *utf8_text, int seconds) {
     NSString *newText = [[NSString alloc] initWithUTF8String:utf8_text];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -35,7 +139,7 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
             NSView *contentView = [[NSView alloc] initWithFrame:windowFrame];
             contentView.wantsLayer = YES;
             // contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
-            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.1] CGColor];
+            contentView.layer.backgroundColor = [[NSColor colorWithWhite:0 alpha:0.3] CGColor];
 
             textField = [[NSTextField alloc] initWithFrame:NSMakeRect(20, 10, windowFrame.size.width - 40, 30)];
             textField.editable = NO;
@@ -108,7 +212,7 @@ void show_text_for_duration(const char *utf8_text, int seconds) {
         }];
     });
 }
-
+*/
 static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
     // 手动 keycode -> 名称映射表
     switch (keyCode) {
@@ -147,7 +251,7 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 33: return @"[";
         case 34: return @"i";
         case 35: return @"p";
-        case 36: return @"<enter>";
+        case 36: return @"ENTER";
         case 37: return @"l";
         case 38: return @"j";
         case 39: return @"'";
@@ -159,27 +263,27 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 45: return @"n";
         case 46: return @"m";
         case 47: return @".";
-        case 48: return @"<tab>";
-        case 49: return @"<space>";
+        case 48: return @"TAB";
+        case 49: return @"SPACE";
         case 50: return @"`";
-        case 51: return @"<backspace>";
-        case 53: return @"<esc>";
-        case 123: return @"<left>";
-        case 124: return @"<right>";
-        case 125: return @"<down>";
-        case 126: return @"<up>";
-        case 122: return @"<f1>";
-        case 120: return @"<f2>";
-        case 99:  return @"<f3>";
-        case 118: return @"<f4>";
-        case 96:  return @"<f5>";
-        case 97:  return @"<f6>";
-        case 98:  return @"<f7>";
-        case 100: return @"<f8>";
-        case 101: return @"<f9>";
-        case 109: return @"<f10>";
-        case 103: return @"<f11>";
-        case 111: return @"<f12>";
+        case 51: return @"BACKSPACE";
+        case 53: return @"ESC";
+        case 123: return @"LEFT";
+        case 124: return @"RIGHT";
+        case 125: return @"DWON";
+        case 126: return @"UP";
+        case 122: return @"F1";
+        case 120: return @"F2";
+        case 99:  return @"F3";
+        case 118: return @"F4";
+        case 96:  return @"F5";
+        case 97:  return @"F6";
+        case 98:  return @"F7";
+        case 100: return @"F8";
+        case 101: return @"F9";
+        case 109: return @"F10";
+        case 103: return @"F11";
+        case 111: return @"F12";
         default:
             return [NSString stringWithFormat:@"<%d>", keyCode];
     }

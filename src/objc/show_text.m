@@ -266,7 +266,7 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 48: return @"TAB";
         case 49: return @"SPACE";
         case 50: return @"`";
-        case 51: return @"BACKSPACE";
+        case 51: return @"BACK";
         case 53: return @"ESC";
         case 123: return @"LEFT";
         case 124: return @"RIGHT";
@@ -284,6 +284,11 @@ static NSString *KeyNameFromKeyCode(CGKeyCode keyCode) {
         case 109: return @"F10";
         case 103: return @"F11";
         case 111: return @"F12";
+        case 115: return @"HOME";
+        case 116: return @"PGUP";
+        case 119: return @"END";
+        case 117: return @"DEL";
+        case 121: return @"PGDN";
         default:
             return [NSString stringWithFormat:@"<%d>", keyCode];
     }

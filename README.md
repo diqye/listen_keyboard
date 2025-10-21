@@ -1,12 +1,13 @@
 # listen_keyboard
-利用Macos系统API监听全局快捷键完成下面功能：
 
-1. 快捷键打开 App
-2. 快捷键模拟用户点击菜单
-3. 将按键显示在屏幕上
+**listen_keyboard** 核心能力聚焦系统快捷键交互：一是获取辅助工具权限后实现快捷键监听，二是支持自定义配置，包括触发 App 启动、模拟菜单点击，三是附加屏幕按键显示功能，提升操作可视化。
+
+****
+showcase:
 
 
-https://github.com/user-attachments/assets/3df3af00-74bb-4ced-aeb8-a81cdf20b2b4
+https://github.com/user-attachments/assets/450fe4a5-1db8-49b0-9b74-d257b16251ef
+
 
 
 
